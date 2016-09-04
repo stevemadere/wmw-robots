@@ -9,9 +9,11 @@ class TastingParticipant
 
   def initialize(_browser)
     @browser = _browser
+    @time_between_ratings = 5
+    @num_items_to_rate = 5
   end
 
-  attr_accessor :browser
+  attr_accessor :browser, :time_between_ratings, :num_items_to_rate
 
   def make_up_credentials
     c = OpenStruct.new
@@ -29,8 +31,6 @@ class TastingParticipant
 
   def home
     browser.visit BASE_URL
-    puts_content
-    
   end
 
   def on_signup_page?
@@ -56,7 +56,6 @@ class TastingParticipant
   def find_tasting(pattern=nil)
     active_tastings_url = BASE_URL + '/events/active'
     browser.visit active_tastings_url
-    puts_content
     tasting_cards = browser.all('div.tasting-details-card')
     the_card = pattern.nil? ? tasting_cards.sample : tasting_cards.detect { |tl| tl.text =~ pattern }
     raise "tasting matching #{pattern} not found" unless the_card
@@ -91,7 +90,6 @@ class TastingParticipant
     browser.fill_in('user[password]',with: credentials.password)
     browser.fill_in('user[password_confirmation]',with: credentials.password)
     browser.click_button('Signup')
-    puts_content
   end
 
   def signup_or_login
@@ -105,7 +103,6 @@ class TastingParticipant
 
   def go_to_tasting(tasting_link)
     tasting_link.click
-    puts_content
     if on_signup_page?
       signup_or_login
     end
@@ -126,6 +123,44 @@ class TastingParticipant
     raise "Expected to be on an exhibitor booth page" unless on_exhibitor_booth_page?
   end
 
+  def go_back_to_festival
+    back_to_festival_button = browser.first('a.festival-link')
+    raise "cannot find the \"back to festival\" button" unless back_to_festival_button
+    back_to_festival_button.click
+  end
+
+  def selected_star_rating(select_element)
+    options = select_element.all('option')
+    options.each do |opt|
+      if opt['selected']
+        return opt['value']
+      end
+    end
+    raise "nothing was selected?!"
+  end
+
+  def option_with_value(select_element,value)
+    select_element.all('option').detect { |opt| opt['value']==value}
+  end
+
+  def rate_something_unrated
+    rating_selects = browser.all('select.rating-select')
+    unrated_rating_selects = rating_selects.select do |node| 
+      selected_star_rating(node) == '0'
+    end
+    if target = unrated_rating_selects.sample
+      rating = (Random.rand(5) + 1).to_s
+      if opt = option_with_value(target,rating)
+        opt.select_option
+        sleep(5.0); # wait until we are fairly sure the xhr has completed
+      else
+        raise "Could not find select option with value == #{rating}"
+      end
+    else
+      puts "Everything was already rated?"
+    end
+  end
+
 
   def puts_content
     content=browser.body
@@ -133,16 +168,27 @@ class TastingParticipant
     puts "==============================================================="
   end
 
+  def rate_some_items(num_items)
+    in_festival_flow = false
+    num_items.times do |i|
+      sleep(time_between_ratings) unless i == 0
+      if on_festival_page?
+        in_festival_flow = true
+        select_random_category
+        select_random_booth
+      end
+      rate_something_unrated
+      if in_festival_flow
+        go_back_to_festival
+      end
+    end
+  end
+
   def go
     home
     tasting_link = find_tasting(/Ashleemouth/)
     go_to_tasting(tasting_link)
-    if on_festival_page?
-      select_random_category
-      select_random_booth
-    end
-    puts_content
-    #rate_something_unrated
+    rate_some_items(num_items_to_rate)
   end
 
 end
