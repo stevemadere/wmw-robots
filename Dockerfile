@@ -13,4 +13,4 @@ RUN mkdir -p  $share_dir
 WORKDIR $install_dir
 COPY . $install_dir
 
-CMD ["bash"]
+CMD ["bash", "./mass_assault.sh","30"]
