@@ -1,0 +1,15 @@
+#! /usr/bin/perl
+
+my $start = shift;
+my $stop = shift;
+my $inc = shift || 1;
+
+my $range = abs($stop - $start);
+
+if ($stop < $start && $inc > 0) {
+    $inc *= -1;
+}
+
+for (my $i = $start; abs($start-$i) <= $range; $i+= $inc) {
+    print "$i\n";
+}
