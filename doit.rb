@@ -15,7 +15,10 @@ load "#{INIT_DIR}/capybara.rb"
 
 browser = Capybara.current_session
 
-robot = TastingParticipant.new(browser)
+num_ratings = (ARGV[0] || 5).to_i
+delay = (ARGV[1] || 5).to_i
+
+robot = TastingParticipant.new(browser, {num_ratings: num_ratings, delay: delay})
 robot.go
 
 #browser.visit BASE_URL

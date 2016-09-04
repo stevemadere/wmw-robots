@@ -7,10 +7,10 @@ class TastingParticipant
   BASE_URL='https://staging.whatsmywine.com'
 #  BASE_URL='http://localhost:3000'
 
-  def initialize(_browser)
+  def initialize(_browser, opts = {})
     @browser = _browser
-    @time_between_ratings = 5
-    @num_items_to_rate = 5
+    @time_between_ratings = opts[:delay] || 5
+    @num_items_to_rate = opts[:num_ratings] || 5
   end
 
   attr_accessor :browser, :time_between_ratings, :num_items_to_rate
@@ -149,10 +149,16 @@ class TastingParticipant
       selected_star_rating(node) == '0'
     end
     if target = unrated_rating_selects.sample
+      form = target.first(:xpath,".//../../..")
+      slugged_wine_id = "unknown wine"
+      if form['action'] =~ /wines\/([^\/]+)/
+        slugged_wine_id = $1
+      end
       rating = (Random.rand(5) + 1).to_s
       if opt = option_with_value(target,rating)
         opt.select_option
-        sleep(5.0); # wait until we are fairly sure the xhr has completed
+        puts "rated #{slugged_wine_id} #{rating} stars"
+        sleep(1.0); # wait until we are fairly sure the xhr has started
       else
         raise "Could not find select option with value == #{rating}"
       end
