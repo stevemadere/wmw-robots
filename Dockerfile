@@ -2,7 +2,7 @@ FROM takitake/docker-poltergeist
 MAINTAINER Steve Madere <steve@stevemadere.com>
 
 RUN apt-get install -y vim
-RUN gem install capybara
+RUN gem install capybara awesome_print
 
 ENV share_dir /shared
 ENV install_dir /usr/src/app
