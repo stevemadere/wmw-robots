@@ -6,6 +6,7 @@ LIB_DIR=BASE_DIR + '/lib'
 INIT_DIR=BASE_DIR + '/init'
 $LOAD_PATH.unshift LIB_DIR
 
+require 'awesome_print'
 require 'tasting_participant'
 
 BASE_URL='https://staging.whatsmywine.com'

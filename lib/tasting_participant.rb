@@ -37,17 +37,30 @@ class TastingParticipant
     browser.has_css?('body.signup-page')
   end
 
-  def on_tasting_or_festival_page?
-    browser.has_css?('body.show-page.tasting')
+  def on_tasting_page?
+    browser.has_css?('.show-page.tasting') 
+  end
+
+  def on_festival_page?
+    browser.has_css?('.show-page.festival')
+  end
+
+  def on_festival_booth_select_page?
+    browser.has_css?('.festival-booth-select-page')
+  end
+
+  def on_exhibitor_booth_page?
+    browser.has_css?('.show-page.exhibitor-booth')
   end
 
   def find_tasting(pattern=nil)
     active_tastings_url = BASE_URL + '/events/active'
     browser.visit active_tastings_url
     puts_content
-    tasting_links = browser.all('a.tasting-link')
-    the_link = pattern.nil? ? tasting_links.sample : tasting_links.detect { |tl| tl.text =~ pattern }
-    raise "tasting matching #{pattern} not found" unless the_link
+    tasting_cards = browser.all('div.tasting-details-card')
+    the_card = pattern.nil? ? tasting_cards.sample : tasting_cards.detect { |tl| tl.text =~ pattern }
+    raise "tasting matching #{pattern} not found" unless the_card
+    the_link = the_card.first('a')
     the_link
   end
 
@@ -96,8 +109,23 @@ class TastingParticipant
     if on_signup_page?
       signup_or_login
     end
-    raise "Expected to be on a tasting page" unless on_tasting_or_festival_page?
+    raise "Expected to be on a tasting page" unless (on_tasting_page? || on_festival_page?)
   end
+
+  def select_random_category
+    category_buttons = browser.all('.category-button')
+    chosen_category = category_buttons.to_a.sample
+    chosen_category.click
+    raise "Expected to be on a festival booth select page" unless on_festival_booth_select_page?
+  end
+
+  def select_random_booth
+    booth_links = browser.all('.booth-link')
+    chosen_booth = booth_links.to_a.sample
+    chosen_booth.click
+    raise "Expected to be on an exhibitor booth page" unless on_exhibitor_booth_page?
+  end
+
 
   def puts_content
     content=browser.body
@@ -109,7 +137,12 @@ class TastingParticipant
     home
     tasting_link = find_tasting(/Ashleemouth/)
     go_to_tasting(tasting_link)
+    if on_festival_page?
+      select_random_category
+      select_random_booth
+    end
     puts_content
+    #rate_something_unrated
   end
 
 end
