@@ -17,8 +17,9 @@ browser = Capybara.current_session
 
 num_ratings = (ARGV[0] || 5).to_i
 delay = (ARGV[1] || 5).to_i
+recommendation_odds = (ARGV[2] || 0.2).to_f
 
-robot = TastingParticipant.new(browser, {num_ratings: num_ratings, delay: delay})
+robot = TastingParticipant.new(browser, {num_ratings: num_ratings, delay: delay, rec_odds: recommendation_odds})
 robot.go
 
 #browser.visit BASE_URL

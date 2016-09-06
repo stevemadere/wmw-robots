@@ -11,9 +11,10 @@ class TastingParticipant
     @browser = _browser
     @time_between_ratings = opts[:delay] || 5
     @num_items_to_rate = opts[:num_ratings] || 5
+    @rec_odds = opts[:rec_odds] || 0.0
   end
 
-  attr_accessor :browser, :time_between_ratings, :num_items_to_rate
+  attr_accessor :browser, :time_between_ratings, :num_items_to_rate, :rec_odds
 
   def make_up_credentials
     c = OpenStruct.new
@@ -31,6 +32,10 @@ class TastingParticipant
 
   def home
     browser.visit BASE_URL
+  end
+
+  def visit_recommendations_page
+    browser.visit BASE_URL + '/stock_items/recommendations'
   end
 
   def on_signup_page?
@@ -144,7 +149,7 @@ class TastingParticipant
   end
 
   def rate_something_unrated
-    rating_selects = browser.all('select.rating-select')
+    rating_selects = browser.all('select.rating-stars')
     unrated_rating_selects = rating_selects.select do |node| 
       selected_star_rating(node) == '0'
     end
@@ -187,6 +192,10 @@ class TastingParticipant
       if in_festival_flow
         go_back_to_festival
       end
+    end
+    if Random.rand(1.0) < rec_odds
+      visit_recommendations_page
+      puts_content
     end
   end
 
